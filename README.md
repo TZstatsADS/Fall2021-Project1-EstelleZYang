@@ -9,7 +9,7 @@ This is the first and only *individual* (as opposed to *team*) project this seme
 
 Term: Fall 2021
 
-+ Projec title: Lorem ipsum dolor sit amet
++ Projec title: Data Story on the History of Philosophy
 + This project is conducted by [Estelle Zhao]
 
 + Project summary: [a short summary] This project is a data story on the history of philosophy based on the dataset "History of Philosophy" from Kaggle. I discussed the development process of philosophy from different perspectives such as school, time, and sentences of works.
