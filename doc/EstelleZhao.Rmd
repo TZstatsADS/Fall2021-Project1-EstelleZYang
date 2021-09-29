@@ -1,0 +1,94 @@
+---
+title: "Data Story on the History of Philosophy"
+author: "Estelle Zhao"
+date: "2021/9"
+output:
+  html_document:
+    df_print: paged
+---
+
+<img src="pic.jpeg" width="500">
+
+The dataset "History of Philosophy" from Kaggle contains over 300,000 sentences from over 50 texts spanning 10 major schools of philosophy, which provides valuable data for us to understand the history of philosophy.  
+
+```{r}
+packages.used=c("tm", "wordcloud", "RColorBrewer", 
+                "dplyr", "tidyverse", "DT", "wordcloud2", "jiebaRD","jiebaR","jpeg")
+# check packages that need to be installed.
+packages.needed=setdiff(packages.used, 
+                        intersect(installed.packages()[,1], 
+                                  packages.used))
+# install additional packages
+if(length(packages.needed)>0){
+  install.packages(packages.needed, dependencies = TRUE,
+                   repos='http://cran.us.r-project.org')
+}
+```
+
+```{r}
+library(tm)
+library(wordcloud)
+library(RColorBrewer)
+library(dplyr)
+library(tidyverse)
+library(DT)
+library(reticulate)
+library(wordcloud2)
+library(jiebaR)
+library(jiebaRD)
+library(jpeg)
+```
+
+### Distribution of Philosophy Works
+
+The historical distribution of philosophy works from different schools could be displayed by the scatter chart. We could see works of the same school were produced in a similar period of time, except Capitalism whose works have a relatively large time span (1776-1936). The earliest school is the Aristotle which published in 320 BC, followed by Plato, Stoicism and Rationalism. The latest schools of philosophy are Analytic, Feminism and Capitalism, which were published in the 20th century.
+
+```{r}
+dat <- read.csv("philosophy_data.csv", header = TRUE)
+dat1 <- dat[!is.na(as.numeric(as.character(dat$sentence_length))),]
+dat1 <- dat1[!is.na(as.numeric(as.character(dat1$original_publication_date))),]
+dat3 <- dat1[!duplicated(dat1[,1]),]
+dat3 <- dat3[order(dat3$original_publication_date),]
+ggplot(data = dat3, mapping = aes(x = original_publication_date, y = c(1:37), color = school)) + 
+  geom_point() +
+  xlab("Original Publication Date") + ylab("Philosophy Works")+
+  theme(axis.text.x = element_text(hjust = 0.5, angle = 45))
+```
+
+### Change in Sentence Length
+
+In order to explore the difference in sentence length between different schools, I sorted each school by the average of works' publication date and used it as the x-axis. Then I calculated the average sentence length of each school as the height of the bar graph. It shows that the sentence length of early and late school works is shorter, while that of middle school works is longer. Maybe the philosophical language had a trend from concise to detailed and then condensed.
+
+```{r}
+sen <- tapply(as.numeric(dat1$sentence_length), dat1$school, mean)
+school <- sort(unique(dat1$school))
+year <- tapply(as.numeric(dat1$original_publication_date), dat1$school, mean)
+s <- data.frame(school, year, sen)
+ggplot(s) + 
+  geom_bar(mapping = aes(x = reorder(school, year), y = sen, fill = school),stat = "identity") + 
+  xlab("School") + ylab("Mean of Sentence Length")+
+  theme(axis.text.x = element_text(hjust = 0.5, angle = 45))
+```
+
+### Key Words of Philosophy Works
+
+I used word cloud to analyze the key points of philosophical sentences. We could intuitively see that words like "different", "life", "god", "labour", "animals" have high frequency in Philosophy works.
+
+```{r}
+# divide sentences
+w <- dat1$sentence_lowered
+mixseg<-worker("mix") 
+w<-segment(w,mixseg) 
+# remove stopwords, character(0), punctuation
+removewords <- function(target_words,stop_words){ 
+  target_words = target_words[target_words %in% stop_words == FALSE]
+  return(target_words)
+}
+sw <- stopwords(kind = "en")
+w2 <- sapply(w, FUN = removewords, sw)
+w2 <- as.vector(unlist(w2))
+a <- removeWords(w2, character(0))
+b <- removePunctuation(w2)
+freq<-table(w2) # word frequency
+wordcloud2(freq)
+```
